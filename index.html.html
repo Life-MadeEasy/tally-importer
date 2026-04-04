@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GSTR-2B Digital Converter Pro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --primary: #0f172a;
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --bg-main: #f1f5f9;
+    --card-bg: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --success: #10b981;
+  }
+
+  body { 
+    font-family: 'Inter', -apple-system, system-ui, sans-serif; 
+    background-color: var(--bg-main); 
+    color: var(--text-main); 
+    margin: 0; 
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .container { width: 100%; max-width: 900px; }
+  
+  header { margin-bottom: 32px; text-align: left; border-left: 4px solid var(--accent); padding-left: 20px; }
+  header h1 { font-size: 24px; font-weight: 800; margin: 0; color: var(--primary); letter-spacing: -0.02em; }
+  header p { color: var(--text-muted); margin-top: 4px; font-size: 14px; }
+
+  .card { 
+    background: var(--card-bg); 
+    border-radius: 12px; 
+    border: 1px solid var(--border); 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .section-label { 
+    font-size: 11px; 
+    font-weight: 700; 
+    color: var(--accent); 
+    text-transform: uppercase; 
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  /* Configuration Grid */
+  .config-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+    gap: 16px; 
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+  .field input { 
+    padding: 10px; 
+    border: 1px solid var(--border); 
+    border-radius: 6px; 
+    font-size: 14px; 
+    background: #fcfcfc;
+  }
+  .field input:focus { outline: none; border-color: var(--accent); background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+  /* Upload Box */
+  .upload-box {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    background: #fff;
+    transition: all 0.2s;
+  }
+  .upload-box:hover { border-color: var(--accent); background: #f8faff; }
+  .upload-box svg { width: 40px; height: 40px; color: var(--text-muted); margin-bottom: 12px; }
+  .upload-box p { margin: 0; font-size: 15px; font-weight: 600; }
+  .upload-box span { font-size: 13px; color: var(--text-muted); }
+
+  /* Stats and Results */
+  .stats { 
+    display: flex; 
+    gap: 12px; 
+    margin-bottom: 24px;
+  }
+  .stat-item { 
+    flex: 1;
+    background: #f8fafc; 
+    padding: 16px; 
+    border-radius: 8px; 
+    border: 1px solid var(--border);
+  }
+  .stat-num { font-size: 20px; font-weight: 700; color: var(--primary); }
+  .stat-name { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--primary);
+    width: 100%;
+  }
+  .btn-primary { background: var(--primary); color: white; border: none; margin-bottom: 12px; }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+
+  .split-downloads {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .btn-small { padding: 8px; font-size: 12px; }
+
+  #log {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: #1e293b;
+    color: #94a3b8;
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 20px;
+    max-height: 80px;
+    overflow-y: auto;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>GSTR-2B Converter</h1>
+    <p>Prepare Tally-ready Excel imports with custom ledger mapping.</p>
+  </header>
+
+  <div class="card">
+    <span class="section-label">1. Configuration</span>
+    <div class="config-grid">
+      <div class="field"><label>Purchase Ledger</label><input type="text" id="cfgPur" value="Purchases"></div>
+      <div class="field"><label>Credit Note Ledger</label><input type="text" id="cfgCR" value="Purchase Return"></div>
+      <div class="field"><label>Debit Note Ledger</label><input type="text" id="cfgDR" value="Purchase Debit"></div>
+      <div class="field"><label>IGST Ledger</label><input type="text" id="cfgIGST" value="Input IGST"></div>
+      <div class="field"><label>CGST Ledger</label><input type="text" id="cfgCGST" value="Input CGST"></div>
+      <div class="field"><label>SGST Ledger</label><input type="text" id="cfgSGST" value="Input SGST"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="section-label">2. File Input</span>
+    <div class="upload-box" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="浸 0 11 0-4-4-4m0 0L8 8m4-4v12"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+      <p>Select GSTR-2B Excel File</p>
+      <span>Drag and drop or click to browse</span>
+      <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none">
+    </div>
+    <div id="log" style="display:none"></div>
+  </div>
+
+  <div id="resultArea" class="card" style="display:none;">
+    <span class="section-label">3. Data Summary & Download</span>
+    <div class="stats">
+      <div class="stat-item"><div class="stat-name">Purchases</div><div class="stat-num" id="cntPurch">0</div></div>
+      <div class="stat-item"><div class="stat-name">Credit Notes</div><div class="stat-num" id="cntCN">0</div></div>
+      <div class="stat-item"><div class="stat-name">Debit Notes</div><div class="stat-num" id="cntDN">0</div></div>
+    </div>
+
+    <button class="btn btn-primary" id="downloadFull">Download Consolidated File (All Sheets)</button>
+    
+    <div class="split-downloads">
+      <button class="btn btn-small" onclick="downloadSingle('Purchases')">↓ Purchases</button>
+      <button class="btn btn-small" onclick="downloadSingle('Credit Notes')">↓ Credit Notes</button>
+      <button class="btn btn-small" onclick="downloadSingle('Debit Notes')">↓ Debit Notes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let sheetsData = {}; 
+
+function log(msg){ 
+  const el = document.getElementById('log');
+  el.style.display = 'block';
+  el.innerHTML += `> ${msg}<br>`;
+}
+
+// Improved Date Formatter to strictly output DD-MM-YYYY
+function formatDate(v) {
+  if (!v) return "";
+  let d;
+  
+  // If Excel handled it as a Date object
+  if (v instanceof Date) {
+    d = v;
+  } 
+  // If it's a string from Excel (often DD/MM/YYYY)
+  else if (typeof v === 'string') {
+    if (v.includes('/')) {
+      let p = v.split('/');
+      if (p.length === 3) return `${p[0].padStart(2,'0')}-${p[1].padStart(2,'0')}-${p[2]}`;
+    }
+    d = new Date(v);
+  }
+  
+  if (d && !isNaN(d.getTime())) {
+    return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
+  }
+  return String(v).replace(/\//g, '-'); // Fallback: replace any slashes with hyphens
+}
+
+function processGSTR2B(ab){
+  const wb = XLSX.read(ab, {type:'array', cellDates: true});
+  const b2bWS = wb.Sheets['B2B'], cdnrWS = wb.Sheets['B2B-CDNR'];
+  
+  if(!b2bWS) { alert("Sheet 'B2B' not found in this file."); return; }
+
+  const cfg = {
+    pur: document.getElementById('cfgPur').value,
+    cr: document.getElementById('cfgCR').value,
+    dr: document.getElementById('cfgDR').value,
+    igst: document.getElementById('cfgIGST').value,
+    cgst: document.getElementById('cfgCGST').value,
+    sgst: document.getElementById('cfgSGST').value
+  };
+
+  const b2bData = XLSX.utils.sheet_to_json(b2bWS, {header:1}).slice(6).filter(r => r[0]);
+  const cdnrData = cdnrWS ? XLSX.utils.sheet_to_json(cdnrWS, {header:1}).slice(6).filter(r => r[0]) : [];
+
+  const HEADERS = ['Voucher Date','Voucher Type Name','Voucher Number','Buyer/Supplier - Address','Buyer/Supplier - Pincode','Ledger Name','Ledger Amount','Ledger Amount Dr/Cr','Item Name','Billed Quantity','Item Rate','Item Rate per','Item Amount','Change Mode ','Voucher Narration','Reference No.'];
+
+  // Process B2B Purchases
+  let pRows = [HEADERS];
+  b2bData.forEach((row, idx) => {
+    let vno = idx + 1, date = formatDate(row[4]), supp = row[1], val = Math.round(row[5]*100)/100, taxbl = Math.round(row[8]*100)/100;
+    let i = Math.round(row[9]*100)/100, c = Math.round(row[10]*100)/100, s = Math.round(row[11]*100)/100;
+    
+    pRows.push([date, 'Purchase', vno, '', '', supp, val, 'Cr', vno, '', '', '', '', '', 'Being Purchase', row[2]]);
+    pRows.push(['', '', '', '', '', cfg.pur, taxbl, 'Dr', vno, '', '', '', '', '', '', '']);
+    if(i>0) pRows.push(['', '', '', '', '', cfg.igst, i, 'Dr', vno, '', '', '', '', '', '', '']);
+    if(c>0) pRows.push(['', '', '', '', '', cfg.cgst, c, 'Dr', vno, '', '', '', '', '', '', '']);
+    if(s>0) pRows.push(['', '', '', '', '', cfg.sgst, s, 'Dr', vno, '', '', '', '', '', '', '']);
+  });
+
+  // Process CDNR
+  let cnRows = [HEADERS], dnRows = [HEADERS];
+  let cnC = 0, dnC = 0;
+  cdnrData.forEach(row => {
+    let type = String(row[3]), date = formatDate(row[5]), supp = row[1], val = Math.round(row[6]*100)/100, taxbl = Math.round(row[9]*100)/100;
+    let i = Math.round(row[10]*100)/100, c = Math.round(row[11]*100)/100, s = Math.round(row[12]*100)/100;
+
+    if(type.toLowerCase().includes('credit')){
+      cnC++;
+      cnRows.push([date, 'Debit Note', cnC, '', '', supp, val, 'Dr', cnC, '', '', '', '', '', 'Return', row[2]]);
+      cnRows.push(['', '', '', '', '', cfg.cr, taxbl, 'Cr', cnC, '', '', '', '', '', '', '']);
+      if(i>0) cnRows.push(['', '', '', '', '', cfg.igst, i, 'Cr', cnC, '', '', '', '', '', '', '']);
+      if(c>0) cnRows.push(['', '', '', '', '', cfg.cgst, c, 'Cr', cnC, '', '', '', '', '', '', '']);
+      if(s>0) cnRows.push(['', '', '', '', '', cfg.sgst, s, 'Cr', cnC, '', '', '', '', '', '', '']);
+    } else {
+      dnC++;
+      dnRows.push([date, 'Purchase', dnC, '', '', supp, val, 'Cr', dnC, '', '', '', '', '', 'Additional', row[2]]);
+      dnRows.push(['', '', '', '', '', cfg.dr, taxbl, 'Dr', dnC, '', '', '', '', '', '', '']);
+      if(i>0) dnRows.push(['', '', '', '', '', cfg.igst, i, 'Dr', dnC, '', '', '', '', '', '', '']);
+      if(c>0) dnRows.push(['', '', '', '', '', cfg.cgst, c, 'Dr', dnC, '', '', '', '', '', '', '']);
+      if(s>0) dnRows.push(['', '', '', '', '', cfg.sgst, s, 'Dr', dnC, '', '', '', '', '', '', '']);
+    }
+  });
+
+  sheetsData = { 'Purchases': pRows, 'Credit Notes': cnRows, 'Debit Notes': dnRows };
+  
+  document.getElementById('cntPurch').textContent = b2bData.length;
+  document.getElementById('cntCN').textContent = cnC;
+  document.getElementById('cntDN').textContent = dnC;
+  document.getElementById('resultArea').style.display = 'block';
+  log('File processed successfully.');
+}
+
+function downloadSingle(name) {
+  const data = sheetsData[name];
+  if(!data || data.length <= 1) { alert("No data found for " + name); return; }
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), name);
+  XLSX.writeFile(wb, `Tally_${name.replace(' ','_')}.xlsx`);
+}
+
+document.getElementById('downloadFull').addEventListener('click', () => {
+  const wb = XLSX.utils.book_new();
+  Object.keys(sheetsData).forEach(name => {
+    if(sheetsData[name].length > 1) {
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheetsData[name]), name);
+    }
+  });
+  XLSX.writeFile(wb, 'Tally_Consolidated_Import.xlsx');
+});
+
+document.getElementById('fileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  log('Analyzing: ' + file.name);
+  const reader = new FileReader();
+  reader.onload = (ev) => processGSTR2B(new Uint8Array(ev.target.result));
+  reader.readAsArrayBuffer(file);
+});
+</script>
+</body>
+</html>
