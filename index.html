@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GSTR-2B Digital Converter Pro</title>
+<title>GSTR-2B Digital Converter Pro (Advanced Mapping)</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
@@ -18,143 +18,53 @@
     --success: #10b981;
   }
 
-  body { 
-    font-family: 'Inter', -apple-system, system-ui, sans-serif; 
-    background-color: var(--bg-main); 
-    color: var(--text-main); 
-    margin: 0; 
-    padding: 40px 20px;
-    display: flex;
-    justify-content: center;
-  }
-
-  .container { width: 100%; max-width: 900px; }
+  body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); padding: 40px 20px; display: flex; justify-content: center; }
+  .container { width: 100%; max-width: 1000px; }
   
-  header { margin-bottom: 32px; text-align: left; border-left: 4px solid var(--accent); padding-left: 20px; }
-  header h1 { font-size: 24px; font-weight: 800; margin: 0; color: var(--primary); letter-spacing: -0.02em; }
-  header p { color: var(--text-muted); margin-top: 4px; font-size: 14px; }
+  header { margin-bottom: 32px; border-left: 4px solid var(--accent); padding-left: 20px; }
+  header h1 { font-size: 24px; font-weight: 800; margin: 0; color: var(--primary); }
 
-  .card { 
-    background: var(--card-bg); 
-    border-radius: 12px; 
-    border: 1px solid var(--border); 
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    padding: 24px;
-    margin-bottom: 20px;
-  }
+  .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .section-label { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; display: block; }
 
-  .section-label { 
-    font-size: 11px; 
-    font-weight: 700; 
-    color: var(--accent); 
-    text-transform: uppercase; 
-    letter-spacing: 0.1em;
-    margin-bottom: 16px;
-    display: block;
-  }
-
-  /* Configuration Grid */
-  .config-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
-    gap: 16px; 
-  }
-  .field { display: flex; flex-direction: column; gap: 6px; }
+  .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
   .field label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
-  .field input { 
-    padding: 10px; 
-    border: 1px solid var(--border); 
-    border-radius: 6px; 
-    font-size: 14px; 
-    background: #fcfcfc;
-  }
-  .field input:focus { outline: none; border-color: var(--accent); background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+  .field input { padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
 
-  /* Upload Box */
-  .upload-box {
-    border: 2px dashed var(--border);
-    border-radius: 12px;
-    padding: 40px 20px;
-    text-align: center;
-    cursor: pointer;
-    background: #fff;
-    transition: all 0.2s;
-  }
+  .upload-box { border: 2px dashed var(--border); border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; background: #fff; }
   .upload-box:hover { border-color: var(--accent); background: #f8faff; }
-  .upload-box svg { width: 40px; height: 40px; color: var(--text-muted); margin-bottom: 12px; }
-  .upload-box p { margin: 0; font-size: 15px; font-weight: 600; }
-  .upload-box span { font-size: 13px; color: var(--text-muted); }
 
-  /* Stats and Results */
-  .stats { 
-    display: flex; 
-    gap: 12px; 
-    margin-bottom: 24px;
-  }
-  .stat-item { 
-    flex: 1;
-    background: #f8fafc; 
-    padding: 16px; 
-    border-radius: 8px; 
-    border: 1px solid var(--border);
-  }
-  .stat-num { font-size: 20px; font-weight: 700; color: var(--primary); }
-  .stat-name { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+  /* Mapping Table Styles */
+  .mapping-container { overflow-x: auto; margin-top: 15px; max-height: 400px; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #f8fafc; position: sticky; top: 0; padding: 10px; text-align: left; border-bottom: 2px solid var(--border); }
+  td { padding: 10px; border-bottom: 1px solid var(--border); }
+  .bulk-bar { background: #eff6ff; padding: 12px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
 
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 12px 24px;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: 1px solid var(--border);
-    background: white;
-    color: var(--primary);
-    width: 100%;
-  }
-  .btn-primary { background: var(--primary); color: white; border: none; margin-bottom: 12px; }
-  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-  .btn:active { transform: translateY(0); }
+  .btn { padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); transition: 0.2s; }
+  .btn-primary { background: var(--primary); color: white; border: none; }
+  .btn-accent { background: var(--accent); color: white; border: none; }
+  
+  .stats { display: flex; gap: 12px; margin-bottom: 20px; }
+  .stat-item { flex: 1; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid var(--border); }
+  .stat-num { font-size: 18px; font-weight: 700; }
 
-  .split-downloads {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-top: 10px;
-  }
-  .btn-small { padding: 8px; font-size: 12px; }
-
-  #log {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    background: #1e293b;
-    color: #94a3b8;
-    padding: 12px;
-    border-radius: 6px;
-    margin-top: 20px;
-    max-height: 80px;
-    overflow-y: auto;
-  }
+  #log { font-family: monospace; font-size: 12px; background: #1e293b; color: #94a3b8; padding: 10px; border-radius: 6px; margin-top: 15px; max-height: 60px; overflow-y: auto; }
 </style>
 </head>
 <body>
 
 <div class="container">
   <header>
-    <h1>GSTR-2B Converter</h1>
-    <p>Prepare Tally-ready Excel imports with custom ledger mapping.</p>
+    <h1>GSTR-2B to Tally Pro</h1>
+    <p>Upload, Map Party Ledgers, and Export.</p>
   </header>
 
   <div class="card">
-    <span class="section-label">1. Configuration</span>
+    <span class="section-label">1. Global Settings</span>
     <div class="config-grid">
-      <div class="field"><label>Purchase Ledger</label><input type="text" id="cfgPur" value="Purchases"></div>
-      <div class="field"><label>Credit Note Ledger</label><input type="text" id="cfgCR" value="Purchase Return"></div>
-      <div class="field"><label>Debit Note Ledger</label><input type="text" id="cfgDR" value="Purchase Debit"></div>
+      <div class="field"><label>Default Purchase Ledger</label><input type="text" id="cfgDefPur" value="Purchases"></div>
       <div class="field"><label>IGST Ledger</label><input type="text" id="cfgIGST" value="Input IGST"></div>
       <div class="field"><label>CGST Ledger</label><input type="text" id="cfgCGST" value="Input CGST"></div>
       <div class="field"><label>SGST Ledger</label><input type="text" id="cfgSGST" value="Input SGST"></div>
@@ -162,139 +72,184 @@
   </div>
 
   <div class="card">
-    <span class="section-label">2. File Input</span>
-    <div class="upload-box" id="dropZone" onclick="document.getElementById('fileInput').click()">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="浸 0 11 0-4-4-4m0 0L8 8m4-4v12"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-      <p>Select GSTR-2B Excel File</p>
-      <span>Drag and drop or click to browse</span>
+    <span class="section-label">2. File Upload</span>
+    <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+      <p>Click to select GSTR-2B Excel</p>
       <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none">
     </div>
     <div id="log" style="display:none"></div>
   </div>
 
-  <div id="resultArea" class="card" style="display:none;">
-    <span class="section-label">3. Data Summary & Download</span>
-    <div class="stats">
-      <div class="stat-item"><div class="stat-name">Purchases</div><div class="stat-num" id="cntPurch">0</div></div>
-      <div class="stat-item"><div class="stat-name">Credit Notes</div><div class="stat-num" id="cntCN">0</div></div>
-      <div class="stat-item"><div class="stat-name">Debit Notes</div><div class="stat-num" id="cntDN">0</div></div>
+  <div id="mappingArea" class="card" style="display:none;">
+    <span class="section-label">3. Party Wise Ledger Mapping</span>
+    
+    <div class="bulk-bar">
+      <span style="font-size: 12px; font-weight: bold;">Bulk Update Selected:</span>
+      <input type="text" id="bulkLedgerName" placeholder="e.g. Rent Expense" style="padding: 6px; border-radius: 4px; border: 1px solid #cbd5e1;">
+      <button class="btn btn-accent" style="padding: 6px 12px; font-size: 12px;" onclick="applyBulk()">Apply</button>
     </div>
 
-    <button class="btn btn-primary" id="downloadFull">Download Consolidated File (All Sheets)</button>
-    
-    <div class="split-downloads">
-      <button class="btn btn-small" onclick="downloadSingle('Purchases')">↓ Purchases</button>
-      <button class="btn btn-small" onclick="downloadSingle('Credit Notes')">↓ Credit Notes</button>
-      <button class="btn btn-small" onclick="downloadSingle('Debit Notes')">↓ Debit Notes</button>
+    <div class="mapping-container">
+      <table id="mappingTable">
+        <thead>
+          <tr>
+            <th width="40"><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
+            <th>Party Name</th>
+            <th>GSTIN</th>
+            <th>Tally Purchase Ledger</th>
+          </tr>
+        </thead>
+        <tbody id="mappingBody"></tbody>
+      </table>
     </div>
+    <br>
+    <button class="btn btn-primary" style="width: 100%;" onclick="generateFinalData()">Process & Generate Download</button>
+  </div>
+
+  <div id="resultArea" class="card" style="display:none;">
+    <span class="section-label">4. Download Files</span>
+    <div class="stats">
+      <div class="stat-item"><div>Purchases</div><div class="stat-num" id="cntPurch">0</div></div>
+      <div class="stat-item"><div>CDNR</div><div class="stat-num" id="cntCDNR">0</div></div>
+    </div>
+    <button class="btn btn-primary" style="width: 100%;" id="downloadFull">Download Consolidated Tally Import (.xlsx)</button>
   </div>
 </div>
 
 <script>
-let sheetsData = {}; 
+let rawB2B = [], rawCDNR = [];
+let sheetsData = {};
+const HEADERS = ['Voucher Date','Voucher Type Name','Voucher Number','Buyer/Supplier - Address','Buyer/Supplier - Pincode','Ledger Name','Ledger Amount','Ledger Amount Dr/Cr','Item Name','Billed Quantity','Item Rate','Item Rate per','Item Amount','Change Mode ','Voucher Narration','Reference No.'];
 
-function log(msg){ 
+function log(msg){
   const el = document.getElementById('log');
   el.style.display = 'block';
   el.innerHTML += `> ${msg}<br>`;
+  el.scrollTop = el.scrollHeight;
 }
 
-// Improved Date Formatter to strictly output DD-MM-YYYY
 function formatDate(v) {
   if (!v) return "";
-  let d;
-  
-  // If Excel handled it as a Date object
-  if (v instanceof Date) {
-    d = v;
-  } 
-  // If it's a string from Excel (often DD/MM/YYYY)
-  else if (typeof v === 'string') {
-    if (v.includes('/')) {
-      let p = v.split('/');
-      if (p.length === 3) return `${p[0].padStart(2,'0')}-${p[1].padStart(2,'0')}-${p[2]}`;
-    }
-    d = new Date(v);
-  }
-  
-  if (d && !isNaN(d.getTime())) {
-    return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
-  }
-  return String(v).replace(/\//g, '-'); // Fallback: replace any slashes with hyphens
+  let d = (v instanceof Date) ? v : new Date(v);
+  if (isNaN(d.getTime())) return String(v).replace(/\//g, '-');
+  return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
 }
 
-function processGSTR2B(ab){
-  const wb = XLSX.read(ab, {type:'array', cellDates: true});
-  const b2bWS = wb.Sheets['B2B'], cdnrWS = wb.Sheets['B2B-CDNR'];
-  
-  if(!b2bWS) { alert("Sheet 'B2B' not found in this file."); return; }
+document.getElementById('fileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  log('Reading file...');
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array', cellDates: true});
+    
+    const b2bWS = wb.Sheets['B2B'];
+    const cdnrWS = wb.Sheets['B2B-CDNR'];
+
+    if(!b2bWS) { alert("Sheet 'B2B' not found!"); return; }
+
+    rawB2B = XLSX.utils.sheet_to_json(b2bWS, {header:1}).slice(6).filter(r => r[0]);
+    rawCDNR = cdnrWS ? XLSX.utils.sheet_to_json(cdnrWS, {header:1}).slice(6).filter(r => r[0]) : [];
+
+    setupMapping();
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+function setupMapping() {
+  const parties = {};
+  [...rawB2B, ...rawCDNR].forEach(row => {
+    const gstin = row[0], name = row[1];
+    if (gstin) parties[gstin] = name;
+  });
+
+  const tbody = document.getElementById('mappingBody');
+  const def = document.getElementById('cfgDefPur').value;
+  tbody.innerHTML = '';
+
+  Object.keys(parties).forEach(gstin => {
+    tbody.innerHTML += `
+      <tr>
+        <td><input type="checkbox" class="p-check" data-gstin="${gstin}"></td>
+        <td>${parties[gstin]}</td>
+        <td>${gstin}</td>
+        <td><input type="text" class="p-ledger" data-gstin="${gstin}" value="${def}" style="width:100%; padding:4px;"></td>
+      </tr>`;
+  });
+
+  document.getElementById('mappingArea').style.display = 'block';
+  log('Unique parties extracted. Map your ledgers.');
+}
+
+function toggleSelectAll(src) {
+  document.querySelectorAll('.p-check').forEach(cb => cb.checked = src.checked);
+}
+
+function applyBulk() {
+  const val = document.getElementById('bulkLedgerName').value;
+  if(!val) return;
+  document.querySelectorAll('.p-check:checked').forEach(cb => {
+    const gstin = cb.getAttribute('data-gstin');
+    document.querySelector(`.p-ledger[data-gstin="${gstin}"]`).value = val;
+  });
+}
+
+function generateFinalData() {
+  const partyMap = {};
+  document.querySelectorAll('.p-ledger').forEach(input => {
+    partyMap[input.getAttribute('data-gstin')] = input.value;
+  });
 
   const cfg = {
-    pur: document.getElementById('cfgPur').value,
-    cr: document.getElementById('cfgCR').value,
-    dr: document.getElementById('cfgDR').value,
     igst: document.getElementById('cfgIGST').value,
     cgst: document.getElementById('cfgCGST').value,
     sgst: document.getElementById('cfgSGST').value
   };
 
-  const b2bData = XLSX.utils.sheet_to_json(b2bWS, {header:1}).slice(6).filter(r => r[0]);
-  const cdnrData = cdnrWS ? XLSX.utils.sheet_to_json(cdnrWS, {header:1}).slice(6).filter(r => r[0]) : [];
-
-  const HEADERS = ['Voucher Date','Voucher Type Name','Voucher Number','Buyer/Supplier - Address','Buyer/Supplier - Pincode','Ledger Name','Ledger Amount','Ledger Amount Dr/Cr','Item Name','Billed Quantity','Item Rate','Item Rate per','Item Amount','Change Mode ','Voucher Narration','Reference No.'];
-
-  // Process B2B Purchases
+  // Process B2B
   let pRows = [HEADERS];
-  b2bData.forEach((row, idx) => {
-    let vno = idx + 1, date = formatDate(row[4]), supp = row[1], val = Math.round(row[5]*100)/100, taxbl = Math.round(row[8]*100)/100;
-    let i = Math.round(row[9]*100)/100, c = Math.round(row[10]*100)/100, s = Math.round(row[11]*100)/100;
-    
-    pRows.push([date, 'Purchase', vno, '', '', supp, val, 'Cr', vno, '', '', '', '', '', 'Being Purchase', row[2]]);
-    pRows.push(['', '', '', '', '', cfg.pur, taxbl, 'Dr', vno, '', '', '', '', '', '', '']);
+  rawB2B.forEach((row, idx) => {
+    const vno = idx + 1, date = formatDate(row[4]), supp = row[1], gstin = row[0];
+    const val = Math.round(row[5]*100)/100, taxbl = Math.round(row[8]*100)/100;
+    const i = Math.round(row[9]*100)/100, c = Math.round(row[10]*100)/100, s = Math.round(row[11]*100)/100;
+    const ledger = partyMap[gstin] || "Purchases";
+
+    pRows.push([date, 'Purchase', vno, '', '', supp, val, 'Cr', vno, '', '', '', '', '', 'B2B Purchase', row[2]]);
+    pRows.push(['', '', '', '', '', ledger, taxbl, 'Dr', vno, '', '', '', '', '', '', '']);
     if(i>0) pRows.push(['', '', '', '', '', cfg.igst, i, 'Dr', vno, '', '', '', '', '', '', '']);
     if(c>0) pRows.push(['', '', '', '', '', cfg.cgst, c, 'Dr', vno, '', '', '', '', '', '', '']);
     if(s>0) pRows.push(['', '', '', '', '', cfg.sgst, s, 'Dr', vno, '', '', '', '', '', '', '']);
   });
 
   // Process CDNR
-  let cnRows = [HEADERS], dnRows = [HEADERS];
-  let cnC = 0, dnC = 0;
-  cdnrData.forEach(row => {
-    let type = String(row[3]), date = formatDate(row[5]), supp = row[1], val = Math.round(row[6]*100)/100, taxbl = Math.round(row[9]*100)/100;
-    let i = Math.round(row[10]*100)/100, c = Math.round(row[11]*100)/100, s = Math.round(row[12]*100)/100;
+  let cdnrRows = [HEADERS];
+  rawCDNR.forEach((row, idx) => {
+    const type = String(row[3]), date = formatDate(row[5]), supp = row[1], gstin = row[0];
+    const val = Math.round(row[6]*100)/100, taxbl = Math.round(row[9]*100)/100;
+    const i = Math.round(row[10]*100)/100, c = Math.round(row[11]*100)/100, s = Math.round(row[12]*100)/100;
+    const ledger = partyMap[gstin] || "Purchase Return";
 
-    if(type.toLowerCase().includes('credit')){
-      cnC++;
-      cnRows.push([date, 'Debit Note', cnC, '', '', supp, val, 'Dr', cnC, '', '', '', '', '', 'Return', row[2]]);
-      cnRows.push(['', '', '', '', '', cfg.cr, taxbl, 'Cr', cnC, '', '', '', '', '', '', '']);
-      if(i>0) cnRows.push(['', '', '', '', '', cfg.igst, i, 'Cr', cnC, '', '', '', '', '', '', '']);
-      if(c>0) cnRows.push(['', '', '', '', '', cfg.cgst, c, 'Cr', cnC, '', '', '', '', '', '', '']);
-      if(s>0) cnRows.push(['', '', '', '', '', cfg.sgst, s, 'Cr', cnC, '', '', '', '', '', '', '']);
+    if(type.toLowerCase().includes('credit')) {
+      cdnrRows.push([date, 'Debit Note', idx+1, '', '', supp, val, 'Dr', idx+1, '', '', '', '', '', 'Return', row[2]]);
+      cdnrRows.push(['', '', '', '', '', ledger, taxbl, 'Cr', idx+1, '', '', '', '', '', '', '']);
+      if(i>0) cdnrRows.push(['', '', '', '', '', cfg.igst, i, 'Cr', idx+1, '', '', '', '', '', '', '']);
+      if(c>0) cdnrRows.push(['', '', '', '', '', cfg.cgst, c, 'Cr', idx+1, '', '', '', '', '', '', '']);
+      if(s>0) cdnrRows.push(['', '', '', '', '', cfg.sgst, s, 'Cr', idx+1, '', '', '', '', '', '', '']);
     } else {
-      dnC++;
-      dnRows.push([date, 'Purchase', dnC, '', '', supp, val, 'Cr', dnC, '', '', '', '', '', 'Additional', row[2]]);
-      dnRows.push(['', '', '', '', '', cfg.dr, taxbl, 'Dr', dnC, '', '', '', '', '', '', '']);
-      if(i>0) dnRows.push(['', '', '', '', '', cfg.igst, i, 'Dr', dnC, '', '', '', '', '', '', '']);
-      if(c>0) dnRows.push(['', '', '', '', '', cfg.cgst, c, 'Dr', dnC, '', '', '', '', '', '', '']);
-      if(s>0) dnRows.push(['', '', '', '', '', cfg.sgst, s, 'Dr', dnC, '', '', '', '', '', '', '']);
+      cdnrRows.push([date, 'Purchase', idx+1, '', '', supp, val, 'Cr', idx+1, '', '', '', '', '', 'Additional Charge', row[2]]);
+      cdnrRows.push(['', '', '', '', '', ledger, taxbl, 'Dr', idx+1, '', '', '', '', '', '', '']);
+      if(i>0) cdnrRows.push(['', '', '', '', '', cfg.igst, i, 'Dr', idx+1, '', '', '', '', '', '', '']);
+      if(c>0) cdnrRows.push(['', '', '', '', '', cfg.cgst, c, 'Dr', idx+1, '', '', '', '', '', '', '']);
+      if(s>0) cdnrRows.push(['', '', '', '', '', cfg.sgst, s, 'Dr', idx+1, '', '', '', '', '', '', '']);
     }
   });
 
-  sheetsData = { 'Purchases': pRows, 'Credit Notes': cnRows, 'Debit Notes': dnRows };
+  sheetsData = { 'Purchases': pRows, 'Returns_CDN': cdnrRows };
   
-  document.getElementById('cntPurch').textContent = b2bData.length;
-  document.getElementById('cntCN').textContent = cnC;
-  document.getElementById('cntDN').textContent = dnC;
+  document.getElementById('cntPurch').textContent = rawB2B.length;
+  document.getElementById('cntCDNR').textContent = rawCDNR.length;
   document.getElementById('resultArea').style.display = 'block';
-  log('File processed successfully.');
-}
-
-function downloadSingle(name) {
-  const data = sheetsData[name];
-  if(!data || data.length <= 1) { alert("No data found for " + name); return; }
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), name);
-  XLSX.writeFile(wb, `Tally_${name.replace(' ','_')}.xlsx`);
+  log('Data processed with custom mapping.');
 }
 
 document.getElementById('downloadFull').addEventListener('click', () => {
@@ -304,16 +259,7 @@ document.getElementById('downloadFull').addEventListener('click', () => {
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheetsData[name]), name);
     }
   });
-  XLSX.writeFile(wb, 'Tally_Consolidated_Import.xlsx');
-});
-
-document.getElementById('fileInput').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if(!file) return;
-  log('Analyzing: ' + file.name);
-  const reader = new FileReader();
-  reader.onload = (ev) => processGSTR2B(new Uint8Array(ev.target.result));
-  reader.readAsArrayBuffer(file);
+  XLSX.writeFile(wb, 'Tally_Import_Mapped.xlsx');
 });
 </script>
 </body>
