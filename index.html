@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GSTR-2B Digital Converter Pro (Advanced Mapping)</title>
+<title>GSTR-2B Digital Converter Pro (Balanced Export)</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
@@ -35,7 +35,6 @@
   .upload-box { border: 2px dashed var(--border); border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; background: #fff; }
   .upload-box:hover { border-color: var(--accent); background: #f8faff; }
 
-  /* Mapping Table Styles */
   .mapping-container { overflow-x: auto; margin-top: 15px; max-height: 400px; overflow-y: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { background: #f8fafc; position: sticky; top: 0; padding: 10px; text-align: left; border-bottom: 2px solid var(--border); }
@@ -58,7 +57,7 @@
 <div class="container">
   <header>
     <h1>GSTR-2B to Tally Pro</h1>
-    <p>Upload, Map Party Ledgers, and Export.</p>
+    <p>Upload, Map Ledgers, and Export Balanced Vouchers.</p>
   </header>
 
   <div class="card">
@@ -103,7 +102,7 @@
       </table>
     </div>
     <br>
-    <button class="btn btn-primary" style="width: 100%;" onclick="generateFinalData()">Process & Generate Download</button>
+    <button class="btn btn-primary" style="width: 100%;" onclick="generateFinalData()">Process & Generate Balanced Vouchers</button>
   </div>
 
   <div id="resultArea" class="card" style="display:none;">
@@ -130,9 +129,19 @@ function log(msg){
 
 function formatDate(v) {
   if (!v) return "";
-  let d = (v instanceof Date) ? v : new Date(v);
-  if (isNaN(d.getTime())) return String(v).replace(/\//g, '-');
-  return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
+  let d;
+  if (v instanceof Date) { d = v; } 
+  else {
+    const parts = String(v).split(/[-/]/);
+    if (parts.length === 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parts[2].length === 2 ? 2000 + parseInt(parts[2], 10) : parseInt(parts[2], 10);
+      d = new Date(year, month, day);
+    } else { d = new Date(v); }
+  }
+  if (isNaN(d.getTime())) return String(v);
+  return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
 }
 
 document.getElementById('fileInput').addEventListener('change', (e) => {
@@ -141,16 +150,12 @@ document.getElementById('fileInput').addEventListener('change', (e) => {
   log('Reading file...');
   const reader = new FileReader();
   reader.onload = (ev) => {
-    const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array', cellDates: true});
-    
+    const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array', cellDates: true, dateNF: 'dd-mm-yyyy' });
     const b2bWS = wb.Sheets['B2B'];
     const cdnrWS = wb.Sheets['B2B-CDNR'];
-
     if(!b2bWS) { alert("Sheet 'B2B' not found!"); return; }
-
-    rawB2B = XLSX.utils.sheet_to_json(b2bWS, {header:1}).slice(6).filter(r => r[0]);
-    rawCDNR = cdnrWS ? XLSX.utils.sheet_to_json(cdnrWS, {header:1}).slice(6).filter(r => r[0]) : [];
-
+    rawB2B = XLSX.utils.sheet_to_json(b2bWS, {header:1, raw: false}).slice(6).filter(r => r[0]);
+    rawCDNR = cdnrWS ? XLSX.utils.sheet_to_json(cdnrWS, {header:1, raw: false}).slice(6).filter(r => r[0]) : [];
     setupMapping();
   };
   reader.readAsArrayBuffer(file);
@@ -162,81 +167,71 @@ function setupMapping() {
     const gstin = row[0], name = row[1];
     if (gstin) parties[gstin] = name;
   });
-
   const tbody = document.getElementById('mappingBody');
   const def = document.getElementById('cfgDefPur').value;
   tbody.innerHTML = '';
-
   Object.keys(parties).forEach(gstin => {
-    tbody.innerHTML += `
-      <tr>
-        <td><input type="checkbox" class="p-check" data-gstin="${gstin}"></td>
-        <td>${parties[gstin]}</td>
-        <td>${gstin}</td>
-        <td><input type="text" class="p-ledger" data-gstin="${gstin}" value="${def}" style="width:100%; padding:4px;"></td>
-      </tr>`;
+    tbody.innerHTML += `<tr><td><input type="checkbox" class="p-check" data-gstin="${gstin}"></td><td>${parties[gstin]}</td><td>${gstin}</td><td><input type="text" class="p-ledger" data-gstin="${gstin}" value="${def}" style="width:100%; padding:4px;"></td></tr>`;
   });
-
   document.getElementById('mappingArea').style.display = 'block';
-  log('Unique parties extracted. Map your ledgers.');
 }
 
-function toggleSelectAll(src) {
-  document.querySelectorAll('.p-check').forEach(cb => cb.checked = src.checked);
-}
-
+function toggleSelectAll(src) { document.querySelectorAll('.p-check').forEach(cb => cb.checked = src.checked); }
 function applyBulk() {
   const val = document.getElementById('bulkLedgerName').value;
   if(!val) return;
   document.querySelectorAll('.p-check:checked').forEach(cb => {
-    const gstin = cb.getAttribute('data-gstin');
-    document.querySelector(`.p-ledger[data-gstin="${gstin}"]`).value = val;
+    document.querySelector(`.p-ledger[data-gstin="${cb.getAttribute('data-gstin')}"]`).value = val;
   });
 }
 
 function generateFinalData() {
   const partyMap = {};
-  document.querySelectorAll('.p-ledger').forEach(input => {
-    partyMap[input.getAttribute('data-gstin')] = input.value;
-  });
+  document.querySelectorAll('.p-ledger').forEach(input => { partyMap[input.getAttribute('data-gstin')] = input.value; });
+  const cfg = { igst: document.getElementById('cfgIGST').value, cgst: document.getElementById('cfgCGST').value, sgst: document.getElementById('cfgSGST').value };
 
-  const cfg = {
-    igst: document.getElementById('cfgIGST').value,
-    cgst: document.getElementById('cfgCGST').value,
-    sgst: document.getElementById('cfgSGST').value
-  };
-
-  // Process B2B
+  // Process B2B (Purchases)
   let pRows = [HEADERS];
   rawB2B.forEach((row, idx) => {
     const vno = idx + 1, date = formatDate(row[4]), supp = row[1], gstin = row[0];
-    const val = Math.round(row[5]*100)/100, taxbl = Math.round(row[8]*100)/100;
-    const i = Math.round(row[9]*100)/100, c = Math.round(row[10]*100)/100, s = Math.round(row[11]*100)/100;
+    const taxbl = Math.round(parseFloat(row[8])*100)/100 || 0;
+    const i = Math.round(parseFloat(row[9])*100)/100 || 0;
+    const c = Math.round(parseFloat(row[10])*100)/100 || 0;
+    const s = Math.round(parseFloat(row[11])*100)/100 || 0;
+    
+    // Balanced Logic: Party Amount (Cr) = Taxable + IGST + CGST + SGST
+    const balancedTotal = Math.round((taxbl + i + c + s) * 100) / 100;
     const ledger = partyMap[gstin] || "Purchases";
 
-    pRows.push([date, 'Purchase', vno, '', '', supp, val, 'Cr', vno, '', '', '', '', '', 'B2B Purchase', row[2]]);
+    pRows.push([date, 'Purchase', vno, '', '', supp, balancedTotal, 'Cr', vno, '', '', '', '', '', 'B2B Purchase', row[2]]);
     pRows.push(['', '', '', '', '', ledger, taxbl, 'Dr', vno, '', '', '', '', '', '', '']);
     if(i>0) pRows.push(['', '', '', '', '', cfg.igst, i, 'Dr', vno, '', '', '', '', '', '', '']);
     if(c>0) pRows.push(['', '', '', '', '', cfg.cgst, c, 'Dr', vno, '', '', '', '', '', '', '']);
     if(s>0) pRows.push(['', '', '', '', '', cfg.sgst, s, 'Dr', vno, '', '', '', '', '', '', '']);
   });
 
-  // Process CDNR
+  // Process CDNR (Notes)
   let cdnrRows = [HEADERS];
   rawCDNR.forEach((row, idx) => {
     const type = String(row[3]), date = formatDate(row[5]), supp = row[1], gstin = row[0];
-    const val = Math.round(row[6]*100)/100, taxbl = Math.round(row[9]*100)/100;
-    const i = Math.round(row[10]*100)/100, c = Math.round(row[11]*100)/100, s = Math.round(row[12]*100)/100;
+    const taxbl = Math.round(parseFloat(row[9])*100)/100 || 0;
+    const i = Math.round(parseFloat(row[10])*100)/100 || 0;
+    const c = Math.round(parseFloat(row[11])*100)/100 || 0;
+    const s = Math.round(parseFloat(row[12])*100)/100 || 0;
+    
+    // Balanced Logic: Total of all split ledgers
+    const balancedTotal = Math.round((taxbl + i + c + s) * 100) / 100;
     const ledger = partyMap[gstin] || "Purchase Return";
 
     if(type.toLowerCase().includes('credit')) {
-      cdnrRows.push([date, 'Debit Note', idx+1, '', '', supp, val, 'Dr', idx+1, '', '', '', '', '', 'Return', row[2]]);
+      // Credit Note from Supplier = Debit Note in our Tally
+      cdnrRows.push([date, 'Debit Note', idx+1, '', '', supp, balancedTotal, 'Dr', idx+1, '', '', '', '', '', 'Return', row[2]]);
       cdnrRows.push(['', '', '', '', '', ledger, taxbl, 'Cr', idx+1, '', '', '', '', '', '', '']);
       if(i>0) cdnrRows.push(['', '', '', '', '', cfg.igst, i, 'Cr', idx+1, '', '', '', '', '', '', '']);
       if(c>0) cdnrRows.push(['', '', '', '', '', cfg.cgst, c, 'Cr', idx+1, '', '', '', '', '', '', '']);
       if(s>0) cdnrRows.push(['', '', '', '', '', cfg.sgst, s, 'Cr', idx+1, '', '', '', '', '', '', '']);
     } else {
-      cdnrRows.push([date, 'Purchase', idx+1, '', '', supp, val, 'Cr', idx+1, '', '', '', '', '', 'Additional Charge', row[2]]);
+      cdnrRows.push([date, 'Purchase', idx+1, '', '', supp, balancedTotal, 'Cr', idx+1, '', '', '', '', '', 'Additional Charge', row[2]]);
       cdnrRows.push(['', '', '', '', '', ledger, taxbl, 'Dr', idx+1, '', '', '', '', '', '', '']);
       if(i>0) cdnrRows.push(['', '', '', '', '', cfg.igst, i, 'Dr', idx+1, '', '', '', '', '', '', '']);
       if(c>0) cdnrRows.push(['', '', '', '', '', cfg.cgst, c, 'Dr', idx+1, '', '', '', '', '', '', '']);
@@ -245,21 +240,18 @@ function generateFinalData() {
   });
 
   sheetsData = { 'Purchases': pRows, 'Returns_CDN': cdnrRows };
-  
   document.getElementById('cntPurch').textContent = rawB2B.length;
   document.getElementById('cntCDNR').textContent = rawCDNR.length;
   document.getElementById('resultArea').style.display = 'block';
-  log('Data processed with custom mapping.');
+  log('Balanced Export generated successfully.');
 }
 
 document.getElementById('downloadFull').addEventListener('click', () => {
   const wb = XLSX.utils.book_new();
   Object.keys(sheetsData).forEach(name => {
-    if(sheetsData[name].length > 1) {
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheetsData[name]), name);
-    }
+    if(sheetsData[name].length > 1) { XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheetsData[name]), name); }
   });
-  XLSX.writeFile(wb, 'Tally_Import_Mapped.xlsx');
+  XLSX.writeFile(wb, 'Tally_Balanced_Import.xlsx');
 });
 </script>
 </body>
